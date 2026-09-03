@@ -21,6 +21,7 @@ import json
 import os
 import re
 import time
+import unicodedata
 from pathlib import Path
 from urllib.parse import quote
 
@@ -141,11 +142,11 @@ def _tcgdex_sets_map(cache):
 
 
 def lookup_tcgdex(num, total, title, cache):
-    """(ref, name) via tcgdex.dev. Gratuit, sans cle. Prix Cardmarket EUR."""
+    """(ref, name) via tcgdex.dev. N'accepte QUE si le nom du Pokemon est dans le titre."""
     setmap = _tcgdex_sets_map(cache)
     candidates = setmap.get(str(total), [])
-    tl = title.lower()
-    fallback = (None, None)
+    tnorm = _norm(title)
+    hits = []  # (ref, name) des cartes dont le nom est confirme dans le titre
     for sid in candidates:
         card = None
         for lang in ("fr", "en"):
@@ -162,25 +163,43 @@ def lookup_tcgdex(num, total, title, cache):
             continue
         name = card.get("name") or ""
         ref = _cm_tcgdex(card)
-        if name and name.split(" ")[0].lower() in tl and ref:
-            return ref, name          # match nom + prix : ideal
-        if ref and fallback[0] is None:
-            fallback = (ref, name)     # a defaut, on retient le 1er prix trouve
-    return fallback
+        if ref and _name_in_title(name, tnorm):
+            hits.append((round(float(ref), 2), name))
+    if not hits:
+        return None, None
+    # Plusieurs sets collent au nom mais avec des prix differents -> on ne tranche pas
+    if len({r for r, _ in hits}) > 1:
+        return None, None
+    return hits[0]
 
 
 # --------------------- Selection / dispatch ---------------------
+def _norm(s):
+    """minuscule + sans accents, pour comparer noms FR et titres."""
+    s = unicodedata.normalize("NFD", s or "")
+    return "".join(c for c in s if unicodedata.category(c) != "Mn").lower()
+
+
+def _name_in_title(name, title_norm):
+    """Vrai si un mot significatif (>=4 lettres) du nom apparait dans le titre."""
+    for tok in _norm(name).split():
+        if len(tok) >= 4 and tok in title_norm:
+            return True
+    return False
+
+
 def _pick_card(cards, title, price_fn, name_key="name"):
     if not cards:
         return None, None
-    tl = title.lower()
-    for c in cards:
-        first = (c.get(name_key, "").split(" ")[0] or "").lower()
-        if first and first in tl:
-            return price_fn(c), c.get(name_key)
-    if len(cards) == 1:
-        return price_fn(cards[0]), cards[0].get(name_key)
-    return None, None  # ambigu -> on ne devine pas
+    tnorm = _norm(title)
+    matched = [c for c in cards if _name_in_title(c.get(name_key, ""), tnorm)]
+    if not matched:
+        return None, None  # nom non confirme dans le titre -> on ne devine pas
+    prices = {round(float(price_fn(c)), 2) for c in matched if price_fn(c)}
+    if len(prices) > 1:
+        return None, None  # plusieurs cartes plausibles, prix differents -> ambigu
+    c = matched[0]
+    return price_fn(c), c.get(name_key)
 
 
 def resolve_price(num, total, title, cache, source):
