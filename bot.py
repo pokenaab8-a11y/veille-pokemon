@@ -59,13 +59,24 @@ SETS_TTL_DAYS = 30
 
 # ----------------------------- eBay -----------------------------
 def get_ebay_token():
-    creds = f"{EBAY_CLIENT_ID}:{EBAY_CLIENT_SECRET}".encode()
+    client_id = EBAY_CLIENT_ID.strip()
+    client_secret = EBAY_CLIENT_SECRET.strip()
+    creds = f"{client_id}:{client_secret}".encode()
     headers = {"Authorization": "Basic " + base64.b64encode(creds).decode(),
                "Content-Type": "application/x-www-form-urlencoded"}
     data = {"grant_type": "client_credentials",
             "scope": "https://api.ebay.com/oauth/api_scope"}
     r = requests.post(EBAY_OAUTH_URL, headers=headers, data=data, timeout=30)
-    r.raise_for_status()
+    if r.status_code != 200:
+        # eBay renvoie la vraie raison dans le corps -> on l'affiche pour diagnostiquer
+        print("=== Echec token eBay ===")
+        print("Statut :", r.status_code)
+        print("Corps  :", r.text)
+        print(f"Diag : App ID = {len(client_id)} caractères, "
+              f"Cert ID = {len(client_secret)} caractères "
+              f"(App ID commence par {client_id[:5]!r})")
+        print("========================")
+        r.raise_for_status()
     return r.json()["access_token"]
 
 
