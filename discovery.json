@@ -1,0 +1,40 @@
+{
+  "enabled": true,
+  "price_source": "tcgdex",
+  "query": "pokemon carte",
+  "min_price": 7,
+  "min_reference_eur": 10,
+  "min_discount_pct": 30,
+  "max_alerts_per_run": 25,
+  "max_lookups_per_run": 60,
+  "skip_graded": true,
+  "category_ids": null,
+  "exclude_keywords": [
+    "lot",
+    "lots",
+    "bulk",
+    "vrac",
+    "fake",
+    "proxy",
+    "replique",
+    "réplique",
+    "replica",
+    "orica",
+    "custom",
+    "classeur",
+    "booster",
+    "display",
+    "coffret",
+    "sealed",
+    "scellé",
+    "étui"
+  ],
+  "_notes": {
+    "price_source": "'tcgdex' (defaut, gratuit, SANS cle) ou 'pokemontcg' (gratuit aussi). Le bot bascule seul sur l'autre si la source primaire tombe.",
+    "logique": "Alerte SEULEMENT si une carte identifiee (via numero ex 199/165) est au moins X% sous sa cote Cardmarket.",
+    "min_reference_eur": "Ignore les cartes dont la cote est < ce montant (pas de marge).",
+    "min_discount_pct": "Decote minimale vs cote. 30 = alerte si prix <= 70% de la cote.",
+    "skip_graded": "true = ignore PSA/CGC/BGS.",
+    "category_ids": "Optionnel : ID categorie 'cartes Pokemon a l'unite' (dans l'URL eBay, _sacat=...)."
+  }
+}

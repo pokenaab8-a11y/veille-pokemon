@@ -1,0 +1,15 @@
+[
+  {
+    "name": "Dracaufeu ex 199/165 (151) FR",
+    "ebay_query": "dracaufeu ex 199/165",
+    "reference_eur": 45,
+    "threshold_pct": 70,
+    "_commentaire": "Cote fixee a la main (45 €), alerte si prix <= 70% -> 31,50 €. Marche avec n'importe quelle source de prix."
+  },
+  {
+    "name": "Carte X (exemple prix max direct)",
+    "ebay_query": "mots cles de la carte",
+    "max_price": 20,
+    "_commentaire": "Alerte des qu'une annonce passe sous 20 €, sans reference."
+  }
+]
